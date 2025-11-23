@@ -3,7 +3,6 @@
 
 #include<string>
 #include<cstring>
-#include<sstream>
 #include"MediaSession.h"
 #include"RtpInstance.h"
 class RtspServer;
@@ -39,6 +38,7 @@ private:
     int sendMessage(const char* data, int len);
     void getPeerIp(int clientFd, std::string& ip);
     bool createRtpRtcpOverUdp(MediaSession::TrackId trackId);
+    bool createRtpRtcpOverTcp(MediaSession::TrackId trackId);
 private:
     /* data */
     bool mIsRtpOverTcp;

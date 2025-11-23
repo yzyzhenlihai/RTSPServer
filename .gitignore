@@ -1,3 +1,5 @@
 resources/
 build/
 bin/
+.cache/
+.vscode/

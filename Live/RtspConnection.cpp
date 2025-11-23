@@ -146,7 +146,7 @@ bool RtspConnection::parseRequest1(const char* begin, const char* end){
     mUrl = url;
     mVersion = version;
     //解析url中的资源名称
-    uint16_t port = 0;
+    int port = 0;
     char ip[64]={0};
     char suffix[64]={0};
     if(sscanf(mUrl.c_str(),"rtsp://%[^:]:%d/%s", ip, &port, suffix)==3){
@@ -227,7 +227,7 @@ bool RtspConnection::parseSetup(std::string message){
     if(pos!=std::string::npos){
         
         if(message.find("RTP/AVP/TCP")!=std::string::npos){
-            //RTP包基于TCP传输
+            // RTP包基于TCP传输
             uint8_t rtpChannel, rtcpChannel;
             if(sscanf(message.c_str(), "%*[^;];%*[^;];%*[^=]=%d-%d",&rtpChannel, &rtcpChannel)!=2){
                 return false;
@@ -236,6 +236,7 @@ bool RtspConnection::parseSetup(std::string message){
             mRtpChannel = rtpChannel;
             
         }else if((pos = message.find("RTP/AVP"))!=std::string::npos){
+            // RTP包基于UDP传输
             uint16_t rtpPort, rtcpPort = 0;
             if(message.find("unicast")!=std::string::npos){
                 if(sscanf(message.c_str(), "%*[^;];%*[^;];%*[^=]=%d-%d",&rtpPort,&rtcpPort)!=2){
@@ -321,7 +322,10 @@ bool RtspConnection::handleSetup(){
     }else{
         if(mIsRtpOverTcp){
             //TODO 基于TCP传输
-
+            if(!createRtpRtcpOverTcp(mTrackId)){
+                LOGI("failed to createRtpOverTcp");
+                return false;
+            }
             
         }else{
             // 基于UDP传输
@@ -426,4 +430,9 @@ bool RtspConnection::createRtpRtcpOverUdp(MediaSession::TrackId trackId){
     mRtcpInstances[trackId] = RtcpInstance::createNewOverUdp(rtcpSockfd, rtcpPort, mPeerIp, mPeerRtcpPort);
 
     return true;
+}
+
+// 创建TCP通道
+bool RtspConnection::createRtpRtcpOverTcp(MediaSession::TrackId trackId){
+
 }

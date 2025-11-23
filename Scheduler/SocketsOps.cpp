@@ -90,7 +90,7 @@ void sockets::setNonBlockAndCloseOnExec(int sockfd){
     */
     flags = ::fcntl(sockfd, F_GETFD, 0);
     flags |= FD_CLOEXEC;
-    ret = ::fcntl(sockfd, F_GETFD, flags);
+    ret = ::fcntl(sockfd, F_SETFD, flags);
 #endif
 }
 
