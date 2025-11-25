@@ -13,10 +13,12 @@ public:
         RTP_OVER_TCP
     };
     static RtpInstance* createNewOverUdp(int localSockfd, uint16_t localPort, std::string destIp, uint16_t destPort);
-    static RtpInstance* createNewOverTcp();
+    static RtpInstance* createNewOverTcp(int clientFd, int rtpChannel);
 
     RtpInstance(int localSockfd, uint16_t localPort, std::string destIp, uint16_t destPort);
+    RtpInstance(int clientFd, int rtpChannel);
 public:
+
     void setSessionId(int sessionId);
     uint16_t getLocalPort();
     void setAlive(bool isAlive);
@@ -32,7 +34,7 @@ private:
     Ipv4Address mDestAddr; //for udp
     int mSessionId;
     bool mIsAlive;
-
+    int mRtpChannel;    // for tcp
 };
 
 class RtcpInstance{
@@ -51,4 +53,5 @@ private:
     Ipv4Address mDestAddr;
     uint16_t mSessionId;
     bool mIsAlive;
+    
 };

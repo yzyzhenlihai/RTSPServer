@@ -326,7 +326,13 @@ bool RtspConnection::handleSetup(){
                 LOGI("failed to createRtpOverTcp");
                 return false;
             }
-            
+            mRtpInstances[mTrackId]->setSessionId(mSessionId);
+            session->addRtpInstance(mTrackId, mRtpInstances[mTrackId]);
+            ss<<"RTSP/1.0 200 OK\r\n";
+            ss<<"CSeq: "<<mCSeq<<"\r\n";
+            ss<<"Transport: RTP/AVP/TCP;unicast;interleaved="<<(int)mRtpChannel<<"-"<<(int)(mRtpChannel+1)<<"\r\n";
+            ss<<"Session: "<<std::setfill('0')<<std::setw(8)<<mSessionId<<"\r\n\r\n";
+
         }else{
             // 基于UDP传输
             if(!createRtpRtcpOverUdp(mTrackId)){
@@ -345,7 +351,7 @@ bool RtspConnection::handleSetup(){
             ss<<"Session: "<<std::setfill('0')<<std::setw(8)<<mSessionId<<"\r\n\r\n"; //少了\r\n找了好久的bug！
 
             
-        }
+        } 
     }
 
     if(sendMessage(ss.str().c_str(), ss.str().size())<0) return false;
@@ -435,4 +441,6 @@ bool RtspConnection::createRtpRtcpOverUdp(MediaSession::TrackId trackId){
 // 创建TCP通道
 bool RtspConnection::createRtpRtcpOverTcp(MediaSession::TrackId trackId){
 
+    mRtpInstances[trackId] = RtpInstance::createNewOverTcp(mClientFd, mRtpChannel);
+    return true;
 }

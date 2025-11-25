@@ -1,22 +1,35 @@
 #include"RtpInstance.h"
 #include"SocketsOps.h"
-
+#include<cstring>
 /*
 RtcpInstance defination
 */
 RtpInstance* RtpInstance::createNewOverUdp(int localSockfd, uint16_t localPort, std::string destIp, uint16_t destPort){
     return new RtpInstance(localSockfd, localPort, destIp, destPort);
 }
-RtpInstance* RtpInstance::createNewOverTcp(){
+RtpInstance* RtpInstance::createNewOverTcp(int clientFd, int rtpChannel){
+    return new RtpInstance(clientFd, rtpChannel);
+}
+//for tcp
+RtpInstance::RtpInstance(int clientFd, int rtpChannel):
+    mRtpType(RTP_OVER_TCP),
+    mLocalSockfd(clientFd),
+    mLocalPort(0),
+    mSessionId(0),
+    mIsAlive(false),
+    mRtpChannel(rtpChannel)
+{
 
 }
-
+//for udp
 RtpInstance::RtpInstance(int localSockfd, uint16_t localPort, std::string destIp, uint16_t destPort):
     mRtpType(RTP_OVER_UDP),
     mLocalSockfd(localSockfd),
     mLocalPort(localPort),
     mDestAddr(destIp, destPort),
-    mIsAlive(false)
+    mSessionId(0),
+    mIsAlive(false),
+    mRtpChannel(0)
 {
      
 
@@ -40,7 +53,14 @@ int RtpInstance::send(RtpPacket* rtpPacket){
         
     }else if(mRtpType == RTP_OVER_TCP){
         //TODO基于TCP发送
-
+        char buf[2048]={0};
+        buf[0] = '$';
+        buf[1] = static_cast<uint8_t>(mRtpChannel);
+        int rtpSize = rtpPacket->size(); 
+        buf[2] = (rtpSize & 0xFF00)>>8; //高八位
+        buf[3] = rtpSize & 0xFF; // 低八位
+        memcpy(buf+4, rtpPacket->data(), rtpSize);
+        return sendOverTcp(buf, 4+rtpSize);
     }
 }
 
@@ -49,7 +69,7 @@ int RtpInstance::sendOverUdp(void* buf, int size){
 }
 
 int RtpInstance::sendOverTcp(void* buf, int size){
-
+    return sockets::write(mLocalSockfd, (char*)buf, size);
 }
 /*
 RtcpInstance defination
