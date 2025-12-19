@@ -102,7 +102,6 @@ void SelectPoller::handleEvent(){
             mIOEvents.push_back(it->second);
         }
         
-        
     }
 
     //执行IO事件

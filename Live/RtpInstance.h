@@ -24,6 +24,7 @@ public:
     void setAlive(bool isAlive);
     bool alive(){ return mIsAlive;}
     int send(RtpPacket* rtpPacket);
+    uint16_t getPeerPort();
 private:
     int sendOverUdp(void* buf, int size);
     int sendOverTcp(void* buf, int size);

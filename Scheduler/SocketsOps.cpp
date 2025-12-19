@@ -122,3 +122,18 @@ int sockets::sendto(int sockfd, const void* buf, int len, const struct sockaddr*
     
     return ::sendto(sockfd, buf, len, 0, destAddr, addrLen);
 }
+
+void sockets::setMulticastTtl(int sockfd, int ttl) {
+    int ret = setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));
+    if (ret < 0) {
+        LOGE("setMulticastTtl error");
+    }
+}
+
+void sockets::setMulticastLoop(int sockfd, int on) {
+    int loop = on ? 1 : 0;
+    int ret = setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+    if (ret < 0) {
+        LOGE("setMulticastLoop error");
+    }
+}

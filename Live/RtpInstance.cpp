@@ -65,11 +65,20 @@ int RtpInstance::send(RtpPacket* rtpPacket){
 }
 
 int RtpInstance::sendOverUdp(void* buf, int size){
-    return sockets::sendto(mLocalSockfd, buf, size, mDestAddr.getAddr());
+    int ret = sockets::sendto(mLocalSockfd, buf, size, mDestAddr.getAddr());
+    if(ret < 0) {
+        LOGE("sendto error, ret=%d", ret);
+    }
+    // LOGI("sendto success, size=%d", ret);
+    return ret;
 }
 
 int RtpInstance::sendOverTcp(void* buf, int size){
     return sockets::write(mLocalSockfd, (char*)buf, size);
+}
+
+uint16_t RtpInstance::getPeerPort(){
+    return mDestAddr.getPort();
 }
 /*
 RtcpInstance defination

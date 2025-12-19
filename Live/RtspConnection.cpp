@@ -27,7 +27,25 @@ RtspConnection::RtspConnection(RtspServer* rtspServer, int clientFd):
 
 RtspConnection::~RtspConnection()
 {
+    LOGI("~RtspConnection()");
+    for (int i = 0; i < MediaSession::MEDIA_MAX_TRACK_NUM; ++i)
+    {
+        if (mRtpInstances[i])
+        {
 
+            MediaSession* session = mRtspServer->getSessionManager()->getSession(mSuffix);
+
+            if (!session) {
+                session->removeRtpInstance(mRtpInstances[i]);
+            }
+            delete mRtpInstances[i];
+        }
+
+        if (mRtcpInstances[i])
+        {
+            delete mRtcpInstances[i];
+        }
+    }
 }
 void RtspConnection::getPeerIp(int clientFd, std::string& ip){
     struct sockaddr_in addr;
@@ -36,7 +54,6 @@ void RtspConnection::getPeerIp(int clientFd, std::string& ip){
     char buf[64]={0};
     inet_ntop(AF_INET, &addr.sin_addr.s_addr, buf, sizeof(buf));
     ip = std::string(buf);
-
 }
 // 解析RTSP请求
 void RtspConnection::handleReadBytes(){
@@ -156,6 +173,7 @@ bool RtspConnection::parseRequest1(const char* begin, const char* end){
     }else{
         return false;
     }
+    mServerIp = std::string(ip);
     mSuffix = std::string(suffix);
     LOGI("method: %s url: %s version:%s\n", method, mUrl.c_str(), mVersion.c_str());
     return true;
@@ -242,7 +260,7 @@ bool RtspConnection::parseSetup(std::string message){
                 if(sscanf(message.c_str(), "%*[^;];%*[^;];%*[^=]=%d-%d",&rtpPort,&rtcpPort)!=2){
                     return false;
                 }
-            }else if(message.find("muticast")!=std::string::npos){
+            }else if(message.find("multicast")!=std::string::npos){
                 return true;
             }else{
                 return false;
@@ -319,6 +337,14 @@ bool RtspConnection::handleSetup(){
     }
     if(session->isStartMuticast()){
         //TODO 多播逻辑
+        ss<<"RTSP/1.0 200 OK\r\n";
+        ss<<"CSeq: "<<mCSeq<<"\r\n";
+        ss<<"Transport: RTP/AVP;multicast;";
+        ss<<"destination="<<session->getMulticastAddr().c_str()<<";";
+        ss<<"source="<<mServerIp.c_str()<<";port="<<session->getMulticastDestRtpPort(mTrackId)<<";";
+        ss<<"ttl=255\r\n";
+        ss<<"Session: "<<std::setfill('0')<<std::setw(8)<<mSessionId<<"\r\n\r\n";
+
     }else{
         if(mIsRtpOverTcp){
             //TODO 基于TCP传输
@@ -434,7 +460,7 @@ bool RtspConnection::createRtpRtcpOverUdp(MediaSession::TrackId trackId){
     //创建RTP和RTCP实例
     mRtpInstances[trackId] = RtpInstance::createNewOverUdp(rtpSockfd, rtpPort, mPeerIp, mPeerRtpPort);
     mRtcpInstances[trackId] = RtcpInstance::createNewOverUdp(rtcpSockfd, rtcpPort, mPeerIp, mPeerRtcpPort);
-
+    
     return true;
 }
 

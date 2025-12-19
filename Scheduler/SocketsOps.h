@@ -26,4 +26,6 @@ namespace sockets{
     void setReuseAddr(int sockfd, int on);
     void setNonBlockAndCloseOnExec(int sockfd);
     void ignoreSigPipeOnSocket(int sockfd);
+    void setMulticastTtl(int sockfd, int ttl);
+    void setMulticastLoop(int sockfd, int on);
 };

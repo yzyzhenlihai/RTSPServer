@@ -49,6 +49,7 @@ private:
     std::string mStreamPrefix; //流前缀，一般为track
     uint32_t mCSeq;
 
+    std::string mServerIp; //服务端IP
     MediaSession::TrackId mTrackId;
     uint8_t mRtpChannel;
     uint16_t mPeerRtpPort;//客户端收发RTP端口号
